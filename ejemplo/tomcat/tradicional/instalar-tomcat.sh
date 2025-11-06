@@ -169,11 +169,157 @@ else # En este caso (SI HAY YA JAVA) tenemos que mirar si la versión nos vale
     fi
 fi
 
-# Descargar tomcat
+echo
+mostrar_mensaje_informativo "Creando grupo y usuario para Tomcat..."
 # Crear usuario y grupo
+# Revisar si el grupo ya existe
+# getent: (get entries) consulta las bases de datos del sistema (usuarios, grupos, etc)
+getent group $TOMCAT_GROUP 1> /dev/null 2>&1
+                           # Ejecutamos el comando en modo silencioso... No va a verse nada por pantalla
+if (( $? != 0 )); then
+    mostrar_mensaje_informativo "  El grupo no existe. Creando el grupo $TOMCAT_GROUP..."
+    groupadd $TOMCAT_GROUP
+    # Este comando nos permite crear un grupo nuevo en el sistema
+    if (( $? == 0 )); then
+        mostrar_mensaje_exito "    Grupo $TOMCAT_GROUP creado correctamente."
+    else
+        mostrar_mensaje_error "    No se ha podido crear el grupo $TOMCAT_GROUP. Saliendo del instalador."
+        exit 1
+    fi
+else
+    mostrar_mensaje_exito "  El grupo $TOMCAT_GROUP ya existe. No se crearán cambios."
+fi
+# Para los usuarios no hay una bbdd llamada "users", sino que están en la bbdd "passwd"
+getent passwd $TOMCAT_USER 1> /dev/null 2>&1
+if (( $? != 0 )); then
+    mostrar_mensaje_informativo "  El usuario no existe. Creando el usuario $TOMCAT_USER..."
+    useradd -M -s /bin/false -g $TOMCAT_GROUP $TOMCAT_USER
+    # Nombre del usuario: $TOMCAT_USER
+    # Nombre del grupo principal: -g $TOMCAT_GROUP
+    # No crear carpeta de usuario para este usuario.. No es una persona real: -M
+    # No permitir login para este usuario: -s /bin/false.. No es una persona real
+    # Es un usuario que solo vamos a usar para ejecutar el servicio de tomcat
+    if (( $? == 0 )); then
+        mostrar_mensaje_exito "    Usuario $TOMCAT_USER creado correctamente."
+    else
+        mostrar_mensaje_error "    No se ha podido crear el usuario $TOMCAT_USER. Saliendo del instalador."
+        exit 1
+    fi
+else
+    mostrar_mensaje_exito "  El usuario $TOMCAT_USER ya existe. No se crearán cambios."
+fi
+
+
+echo
+mostrar_mensaje_informativo "Descargando e instalando Tomcat versión $TOMCAT_VERSION..."
+# Descargar tomcat
+# Necesitamos la versión completa de tomcat: 9.0.65. La tenemos en la variable TOMCAT_VERSION
+# El MAJOR también lo necesitamos: 9 y no lo tenemos guardado en ninguna variable
+TOMCAT_MAJOR_VERSION=${TOMCAT_VERSION%%.*}  # 9
+url="https://dlcdn.apache.org/tomcat/tomcat-${TOMCAT_MAJOR_VERSION}/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz"
+
+# Para la descarga podemos usar el comando wget
+# Dónde hacemos la descarga? Podemos usar /tmp
+# /tmp en linux se borra automáticamente al reiniciar el sistema
+carpeta_temporal="/tmp/tomcat_install"
+archivo_descarga="$carpeta_temporal/apache-tomcat-${TOMCAT_VERSION}.tar.gz"
+mkdir -p $carpeta_temporal/descomprimido
+# -p    hace 2 cosas
+#   Crea la carpeta y las carpetas padre si no existen
+#   En caso de que la carpeta ya exista, no da error
+mostrar_mensaje_informativo "  Descargando Tomcat desde: ${RESET}$url"
+wget -q -O $archivo_descarga $url
+    # -q    modo silencioso (quiet)
+    # -O    nombre del fichero de salida
+
+if (( $? != 0 )); then
+    mostrar_mensaje_error "    No se ha podido descargar Tomcat desde $url. Saliendo del instalador."
+    exit 1
+else
+    mostrar_mensaje_exito "    Tomcat descargado correctamente."
+fi
 # Descomprimir tomcat
+tar -xzf $archivo_descarga -C $carpeta_temporal/descomprimido
+    # -x    extraer
+    # -z    formato gzip
+    # -f    fichero
+    # -C    carpeta destino
+
+if (( $? != 0 )); then
+    mostrar_mensaje_error "    No se ha podido descomprimir Tomcat. Saliendo del instalador."
+    exit 1
+else
+    mostrar_mensaje_exito "    Tomcat descomprimido correctamente."
+fi
+
+# Mover el descargado y descomprimido a /opt/tomcat
+
+mostrar_mensaje_informativo "  Copiando Tomcat en /opt/tomcat ..."
+directorio_instalacion="/opt/tomcat"
+mv $carpeta_temporal/descomprimido/apache-tomcat-$TOMCAT_VERSION $directorio_instalacion
+# Al tomcat hay que ponerle propietario su usuario y grupo
+mostrar_mensaje_informativo "  Estableciendo permisos de usuario y grupo para Tomcat ..."
+chown -R $TOMCAT_USER:$TOMCAT_GROUP $directorio_instalacion
+mostrar_mensaje_exito "    Tomcat instalado correctamente en $directorio_instalacion."
+
+echo
+mostrar_mensaje_informativo "Configurando Tomcat como servicio del sistema (systemd)..."
 # Crear un Unit file de systemd para ejecutar tomcat como servicio con:
-# - Usuario y grupo definidos
-# - Variables de entorno JAVA_HOME y CATALINA_HOME
-# Iniciar el servicio
-# Lo programamos para que en el siguiente arranque del sistema se inicie automáticamente
+cat << EOF > /etc/systemd/system/tomcat.service
+[Unit]
+Description=Servidor de Aplicaciones Apache Tomcat
+After=network.target
+
+[Service]
+Type=forking
+User=${TOMCAT_USER}
+Group=${TOMCAT_GROUP}
+
+Environment="JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64"
+Environment="JRE_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64"
+Environment="CATALINA_HOME=${directorio_instalacion}"
+Environment="CATALINA_BASE=${directorio_instalacion}"
+Environment="CATALINA_TMPDIR=${directorio_instalacion}/temp"
+
+ExecStart=${directorio_instalacion}/bin/startup.sh
+ExecStop=${directorio_instalacion}/bin/shutdown.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+# cat << EOF ... EOF        Es como si fuera un echo que escribe varias líneas 
+# Y lo que estamos haciendo es redirigir esa salida a un fichero llamado /etc/systemd/system/tomcat.service
+
+mostrar_mensaje_exito "  Archivo de servicio creado en /etc/systemd/system/tomcat.service"
+
+# Recargar los archivos de configuración de systemd
+systemctl daemon-reload 1> /dev/null 2>&1
+systemctl enable tomcat   # Habilitar el servicio para que arranque automáticamente al iniciar el sistema
+mostrar_mensaje_exito "  Servicio de Tomcat configurado correctamente."
+
+systemctl start tomcat    # Iniciar el servicio de tomcat
+mostrar_mensaje_exito "  Servicio de Tomcat iniciado correctamente."
+
+echo
+mostrar_mensaje_informativo "Vamos a esperar unos segundos a que Tomcat arranque para probarlo..."
+sleep 10   # Esperar 10 segundos
+# ss -tlnp
+# -t   Mostrar solo conexiones TCP
+# -l   Mostrar solo puertos en escucha
+# -n   Mostrar números de puerto en lugar de nombres
+# -p   Mostrar el proceso que está usando el puerto
+
+# Probar que Tomcat está funcionando
+curl http://localhost:8080/ 1> /dev/null 2>&1
+if (( $? == 0 )); then
+    mostrar_mensaje_exito "Tomcat se ha instalado y está funcionando correctamente."
+    mostrar_mensaje_informativo "Puede acceder a la página de bienvenida de Tomcat en: ${RESET}http://localhost:8080/"
+else
+    mostrar_mensaje_error "No se ha podido acceder a Tomcat. Verifique los logs para más información."
+    exit 1
+fi
+
+# Fin del script
+
+echo
+mostrar_mensaje_informativo "Gracias por usar el instalador de Tomcat. ¡Hasta pronto!"

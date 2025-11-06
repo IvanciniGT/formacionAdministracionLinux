@@ -80,3 +80,6 @@ Y que esté más o menos parametrizado.
 ---
 
 Segundo script que vamos a montar... el tomcat en un contenedor de docker!
+# Volúmenes (Disco)
+# Redes
+# Intro: AppArmour / SELinux
