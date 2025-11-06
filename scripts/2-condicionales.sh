@@ -37,20 +37,20 @@
 
 
 numero1=10
-numero2=010
+numero2=010  # 010 es octal, equivale a 8 en decimal
 numero3=5
 
 if [[ "$numero1" == "$numero2" ]]; then
     echo "El texto de numero1 es igual al texto de numero2"
 else
-    echo "El texto de numero1 es diferente al texto de numero2"
+    echo "El texto de numero1 es diferente al texto de numero2"  # "10" != "010" como texto
 fi
 
 
 if (( $numero1 == $numero2 )); then
     echo "El valor de numero1 es igual al valor de numero2"
 else
-    echo "El valor de numero1 es diferente al valor de numero2"
+    echo "El valor de numero1 es diferente al valor de numero2"  # 10 != 8 (010 octal = 8 decimal)
 fi
 
 echo "A continuación vamos a formatear su disco duro."

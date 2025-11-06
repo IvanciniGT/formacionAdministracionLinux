@@ -26,6 +26,8 @@ declare otra_variable="Hola a todos" # Lo usamos menos.. no es obligatorio
 # Una vez que tenemos una variable, podemos usarla en nuestro script.
 # Para usar el valor de una variable, tenemos que poner el símbolo $ delante del nombre.
 echo "El valor de mi_variable es: $mi_variable" # Esto imprimirá: El valor de mi_variable es: Ivan
+echo 'El valor de mi_variable es: $mi_variable' # Esto imprimirá: El valor de mi_variable es: $mi_variable
+
 # Realmente esa sintaxis es una abreviación de la sintaxis ${mi_variable}
 echo "El valor de mi_variable es: ${mi_variable}" # Esto imprimirá: El valor de mi_variable es: Ivan
 # En muchos casos podemos obviar las llaves {}
