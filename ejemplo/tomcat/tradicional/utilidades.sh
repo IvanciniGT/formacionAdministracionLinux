@@ -62,6 +62,7 @@ function pedir_dato() {
             #echo $valor_defecto
             # Guardar el valor por defecto en la variable cuyo nombre se pasa como argumento
             eval "${nombre_variable}='${valor_defecto}'"
+            #    "numero_introducido=5"
             #eval: ejecuta un texto como si fuera un comando
             return 0
         elif [[ "${dato_usuario}" =~ ${patron} ]]; then
@@ -80,15 +81,19 @@ function pedir_dato() {
 }
 
 # Ejemplo de uso:
-pedir_dato "Introduce un número" \
-            numero_introducido
-           '^[1-9]$|^10$' \
-           "Número no valido: El número debe estar entre 1 y 10" \
-           3 \
-           "1-10" \
-           5
+#pedir_dato "Introduce un número" \
+#            numero_introducido \
+#           '^[1-9]$|^10$' \
+#           "Número no valido: El número debe estar entre 1 y 10" \
+#           3 \
+#           "1-10" \
+#           5
 
-echo El usuario ha introducido el número: $numero_introducido
+#if (( $? == 0 )); then
+#    mostrar_mensaje_exito "El usuario ha introducido el número: $numero_introducido"
+#else
+#    mostrar_mensaje_error "No se ha podido obtener un número válido"
+#fi
 
 
 # Cuando esto se ejecute:
