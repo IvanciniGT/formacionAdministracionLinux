@@ -61,3 +61,17 @@ read -p "Por favor, introduce tu edad: " edad_usuario     # -p = Te voy a pasar 
 read -p "Quieres continuar? (s/n): " -n 1 respuesta_usuario   # -n 1 = solo lee 1 carácter.. sin necesidad de pulsar Enter
 echo
 echo "Has decidido $respuesta_usuario"
+
+
+texto="En un lugar de la Mancha de cuyo nombre no quiero acordarme vivía un hidalgo caballero..."
+
+echo "TEXTO: $texto"
+echo "TEXTO: ${texto}" # La cosita es que las llaves escoden funcionalidades extra
+echo "LONGITUD DEL TEXTO: ${#texto}"  # La longitud del texto
+echo "CINCO PRIMEROS CARACTERES: ${texto:0:5}"   # Desde la posición
+# Quitar un prefijo
+echo "SIN 'En un ': ${texto#En un }" # Incluso podemos usar caracteres comodín
+# Quitar un prefijo más grande con comodín
+echo "SIN 'En * de la ': ${texto#*Mancha}"
+# Podría quitar sufuijos
+echo "SIN 'acordarme vivía un hidalgo caballero...': ${texto%caballero*}"

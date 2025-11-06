@@ -103,3 +103,19 @@ function pedir_dato() {
 # Introduce un número (1-10) [5]:
 
 # Quieres instalar el java? (s/n) [s]:
+
+
+function asegurar_usuario_root() {
+    if (( $EUID != 0 )); then
+        mostrar_mensaje_error "Este script debe ejecutarse como root."
+        mostrar_mensaje_error "Pruebe a usar 'sudo' al ejecutar el script."
+        mostrar_mensaje_error "Abortando..."
+        exit 1
+    fi
+}
+
+# EUID Es una variable que tenemos disponible en Linux: Effective User ID
+# UID Es la ID del usuario real
+# Mi "usuario" tiene UID 1000
+# Cuando uso sudo, mi UID sigue siendo 1000, pero mi EUID pasa a 0
+# El UID del usuario root es 0
