@@ -1,0 +1,229 @@
+# YAML
+# Es un lenguaje para estructurar información, datos en texto plano.
+# Similar en su objetivo a XML o a JSON
+# Es un lenguaje orientado a seres humanos, es tá inspirado en la sintaxis de python
+# Admite comentarios, no como JSON. Aleluya!
+# Los comentarios con con la almohadilla #
+# La extensión de los archivos suele ser .yml o .yaml
+# YAML \
+#  XML  > ML = Markup Language, lenguaje de marcas
+# HTML /  YAML = YAML Ain't Markup Language, YAML no es un lenguaje de marcas
+# YAML viene definido por un estandar MUY AMPLIO, actualmente en versión 1.2.. En la práctica usamos un 20% de sus características.
+---
+# En un archivo YAML puedo tener muchos documentos yaml, esto no existe en JSON o XML
+# Cada documento YAML empieza con tres guiones ---, salvo el primero
+---
+# Un documento YAML es un NODO.
+# Hay 2 tipos de nodos en YAML:
+# Nodos escalares: contienen un único valor (cadena, número, booleano, nulo)
+# Nodos de colección: contienen múltiples valores (listas ordenadas y mapas desordenados)
+---
+# Nodos escalares: Números
+12  # Así se ponen los números en YAML
+---
+-13.87
+---
+.Inf # .INF .inf
+---
+.nan # .NAN .Nan
+---
+# Booleanos, valores lógicos
+true # true, True, TRUE
+---
+FALSE # false, False, FALSE
+---
+# OJO.. En versión 1.1 del estándar YAML, también se podían usar:
+# yes, no, on, off, y, n.. con variantes en mayúsculas y minúsculas
+# Eso ya no forma parte del estándar 1.2
+# La cagaron : No lo pusieron como deprecated, sino que lo eliminaron directamente
+# Qué pasó, pues que todos los documentos que tenía la gente iban a dejar de funcionar
+# Por ese motivo, muchos PARSERS (programas que leen ciertos lenguajes, como yaml) siguen soportando esas formas antiguas
+# Si veo un documento con cualquiera de esas formas, lo cambio inmediatamente a true o false
+# Y no los uso nunca yo.. solo true o false
+---
+# Nodos escalares: Cadenas de texto: CON DIFERENCIA LO MAS COMPLEJO DE YAML!
+Hola 'yo "soy 
+
+un \texto con #muchas palabras
+---
+"Hola 'yo \"soy 
+
+un \\texto con #muchas palabras"
+---
+'Hola ''yo "soy 
+
+un \texto con #muchas palabras'
+---
+# En YAML la sintaxis sin comillas es la preferida, y la que debemos usar, siempre que podamos
+# La contrabarra solo funciona como carácter de escape entre comillas dobles.
+# En ese caso podemos usar: \\ \" \n \t \r 
+# Los saltos de linea en los textos, YAML los transforma en espacios en blanco.
+# Si pongo 2 saltos de linea, YAML los transforma en un salto de linea
+# Una locura.
+# RESUMEN PRACTICO: SOLO USO LA SINTAXIS DE SIN COMILLAS y para textos simples (solo una linea de texto)
+# Si necesito introducir algún carácter raro, entonces es cuando uso comillas simples o dobles
+# Si tengo textos con varias lineas....
+# YAML tiene otras 2 sintaxis para textos! Estas son las que usamos para textos multilinea
+---
+# Sintaxis "literal"
+|4+
+      Al menos un espacio en blanco a la derecha, puedo comenzar a escribir mi texto
+    Ese texto puede tener varias lineas
+      Y los saltos de linea se respetan tal cual los escribo
+
+    Además puedo tener caracteres raros # $%&/()=?¿ " \ '
+    Lo que sea
+
+
+# Por defecto el sangrado (los espacios en blanco) que hay en la primera linea, 
+# se los quita a todas las lineas
+# Por defecto, YAML añade un UNICO salto de linea al final del texto, aunque no lo haya escrito
+# Si no quiero ese salto de linea, pongo un guion - justo después del |
+# Poniendo un + después del |, le digo a YAML que mantenga TODOS los saltos de linea al final del texto
+---
+# Sintaxis "folded". Habitualmente la reservamos para comandos largos o textos largos que queremos en una sola linea
+>
+    docker container create
+       --name mariadb01
+         -e MARIADB_ROOT_PASSWORD=MiPasswordSegura
+         -e MARIADB_DATABASE=MiBaseDeDatos
+         -e MARIADB_USER=usuariobd
+         -e 'MARIADB_PASSWORD=OtraPasswordSegura'
+         -p 3306:3306
+         -v "c:\usuario\yo\datos\mariadbdata:/var/lib/mysql"
+         --cpu 2 
+         --memory 2g
+         mariadb:10.11
+
+
+# En la sintaxis folded, los caracteres se respetan tal cual los escribo. Puedo usar caracteres raros sin problemas
+# Pero los saltos de linea se transforman en espacios en blanco
+# Al igual que con la sintaxis literal, puedo usar los modificadores - o + justo después del > para determinar el tratamiento de los saltos de linea al final del texto
+---
+# Y ESO SON LOS TEXTOS!
+---
+
+# Nodos de tipo colección: Listas ordenadas
+- Item 1
+- 22
+- True
+- # Este cuarto item de la lista contiene una lista anidada
+      - Subitem 1
+      - Subitem 2
+      - Subitem 3
+# Eso lo puedo hacer si al menos sangro los subitems con 1 espacio más que el item padre... Y da igual cuantos ponga. IMPORTANTE: Que mantenga la sangría por niveles
+-     - Subitem 1
+      - Subitem 2
+      - Subitem 3
+ 
+# A YAML se la trae al peiro cuantos espacios en blanco haya después del guion. Al menos 1. Se los come.
+--- 
+# Hay una sintaxis alternativa Y DESACONSEJADA para listas ordenadas:
+["item1", 33, true, ["subitem1", "subitem2", "subitem3"], ["subitem1", "subitem2", "subitem3"]]   # NO LO USAMOS.
+# Solo está ahí para compatibilidad con JSON. Todo documeento JSON es por definición (según reconoce YAML) un documento YAML válido
+# Por qué está desaconsejada:
+# - 1. Difícil de leer por humanos
+# - 2. Estos documentos al final acaban guardados en un sistema de control de versiones (git, svn, mercurial..)
+#      Y en esos sistemas, las diferencias entre versiones se hacen por lineas.
+# Si cambio un valor, usando la primera sintaxis, el sistema de control de versiones me dirá exactamente qué linea he cambiado
+# Si uso la sintaxis alternativa, me dirá que he cambiado toda la linea, y ahora busca lo que es.
+---
+# Hay un ÚNICO escenario/ caso de uso legítimo para usar la sintaxis alternativa:
+# Listas vacías:
+[]
+---
+# Mapas desordenados (diccionarios, objetos)
+clave1: Item1
+clave2: 22
+clave3: True
+clave4: 
+  subclave1: Subitem1
+  subclave2: Subitem2
+  subclave3: 
+    - Subsubitem1
+    - Subsubitem2
+    - Subsubitem3
+clave5: 
+  - Subitem1
+  - Subitem2
+  - Subitem3
+# Este es el tipo de documento yaml más usado en la práctica
+---
+# Sintaxis alternativa (desaconsejada) para mapas desordenados
+{"clave1": "Item1", "clave2": 22, "clave3": true, "clave4": {"subclave1": "Subitem1", "subclave2": "Subitem2", "subclave3": ["Subsubitem1", "Subsubitem2", "Subsubitem3"]}, "clave5": ["Subitem1", "Subitem2", "Subitem3"]}  
+# NO LO USAMOS
+# Por las mismas razones que en las listas ordenadas
+---
+# Aunque hay un caso legítimo para usar la sintaxis alternativa en mapas desordenados:
+# Mapas vacíos
+{}
+---
+
+# Los mapas son desordenados, eso implica:
+clave1: Item1
+clave2: Item2
+clave3: Item3
+---
+clave2: Item2
+clave1: Item1
+clave3: Item3
+# Desde el punto de vista de YAML, ambos documentos son idénticos
+---
+
+# Para terminar un comentario:
+# Hay que tener cuidado con el editor de textos que uso para crear/modificar estos archivos.
+# Para YAML, un espacio en blanco (o 4) son diferentes de una tabulación
+# Usamos editores que automaticamente convierten tabulaciones en espacios en blanco
+# Si uso editores tipo VI, VIM, NANO... la puedo liar... block de notas.
+# A la vista me parece que los sangrados son iguales... pero puede que no lo sean... Y en una linea tenga 4 espacios en blanco y en otra una tabulación
+# YAML me da error al leer el documento
+
+---
+# YAML tiene otras 50 características más avanzadas (anclas, referencias, tipos personalizados, etiquetas, etc.)
+# Pero esas características avanzadas no las usamos en la práctica habitual
+
+usuario: 
+  nombre: Iván
+  apellidos: Martínez Gómez
+  edad: 45
+  activo: true
+  idiomas:
+    - español
+    - inglés
+    - francés
+  direccion: &dir_principal
+    calle: Calle Falsa 123
+    ciudad: Springfield
+    codigo_postal: 28080
+
+amigos:
+  - nombre: Juan Pérez
+    edad: 44
+    activo: false
+  - nombre: Ana López
+    edad: 46
+    activo: true
+    contacto_trabajo:
+      <<: *dir_principal
+      telefono: "+34 600 123 456"
+
+# Hay otros tipos de datos escalares: nulos, fechas, horas, timestamps...
+
+---
+
+# En los documentos YAML, YAML como estándar nos ofrece una sintaxis básica: ESTA.
+
+# Cada programa que usa YAML, me impone una determinada estructura de documento. Tu documento debe ser un mapa, con tales claves concretas.
+# Y cada clave tiene que teener un determinado valor de un tipo de dato concreto: texto, número... otro mapa
+# Eso se denomina "esquema de documento YAML"
+# Cada programa que usa YAML, define su propio esquema de documento YAML
+
+# Una cosa es conocer la sintaxis básica de YAML (lo que hemos visto aquí)
+# Y otra cosa es conocer los esquemas concretos que usa cada programa que usa YAML:
+# - Docker 
+# - Kubernetes
+# - Ansible
+# - Gitlab CI/CD
+# - Github Actions
+# - Azure DevOps Pipelines
+# - Netplan: Configuración de redes en Ubuntu

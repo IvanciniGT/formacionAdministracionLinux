@@ -1,0 +1,44 @@
+
+services:
+  bbdd:
+    image:                  mariadb:10.11
+    container_name:         mariadb01
+    environment:
+      MARIADB_ROOT_PASSWORD: MiPasswordSegura
+      MARIADB_DATABASE:      MiBaseDeDatos
+      MARIADB_USER:          usuariobd
+      MARIADB_PASSWORD:      OtraPasswordSegura
+    ports:
+                          - "3306:3306"
+    volumes:
+                          - c:\usuario\yo\datos\mariadbdata:/var/lib/mysql # Este es el volumen donde se almacenan los datos de la BBDD
+    deploy:
+      resources:
+        limits:
+          cpus:             '2.0'
+          memory:           2G
+  
+  appserver:
+    image:                  tomcat:9.0.111
+    container_name:         mitomcat
+    ports:
+                          - "8080:8080"
+    depends_on:
+                          - bbdd
+
+# Y luego para trabajar con ellos es más sencillo.
+# $ docker compose -f ejemplo/tomcat/contenedores/docker-compose.yaml VERBO
+# NOTA: Si el fichero está en la misma carpeta desde donde ejecuto el comando, y se llama: docker-compose.yaml o docker-compose.yml
+#       no es necesario poner el -f ejemplo/tomcat/contenedores/docker-compose.yaml
+
+# $ docker compose VERBO
+# VERBOS:
+#   up:      Crear y Arranca los contenedores definidos en el fichero
+#            -d: Para que se ejecute en segundo plano (detached)
+#   down:    Para y elimina los contenedores definidos en el fichero
+#   start:   Arranca los contenedores definidos en el fichero (deben estar creados)
+#   stop:    Para los contenedores definidos en el fichero (pero no los elimina)
+
+# $ docker compose up
+# $ docker compose up -d
+# $ docker compose down
